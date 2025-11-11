@@ -1,3 +1,5 @@
+using System;
+using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using TESTPROJESI.Services.Implementations;
@@ -77,8 +79,7 @@ namespace TESTPROJESI.Core.Extensions
         /// <summary>
         /// HttpClient servislerini Polly ile birlikte kaydeder
         /// </summary>
-        public static IServiceCollection AddHttpClients(this IServiceCollection services,
-     IAsyncPolicy<HttpResponseMessage> retryPolicy)
+        public static IServiceCollection AddHttpClients(this IServiceCollection services)
         {
             // ✅ NetOpenXClient (iş emirleri dahil tüm NetOpenX çağrıları için)
             services.AddHttpClient("NetOpenXClient", (serviceProvider, client) =>
@@ -87,18 +88,21 @@ namespace TESTPROJESI.Core.Extensions
                 client.BaseAddress = new Uri(settings.BaseUrl);
                 client.Timeout = TimeSpan.FromSeconds(60);
             })
-            .AddPolicyHandler(retryPolicy);
+            .AddPolicyHandler((serviceProvider, _) =>
+                serviceProvider.GetRequiredService<IAsyncPolicy<HttpResponseMessage>>());
 
             // diğer servislerin client'ları (gerekirse)
             services.AddHttpClient<TESTPROJESI.Services.Implementations.NetOpenXService>(client =>
             {
                 client.Timeout = TimeSpan.FromSeconds(30);
-            }).AddPolicyHandler(retryPolicy);
+            }).AddPolicyHandler((serviceProvider, _) =>
+                serviceProvider.GetRequiredService<IAsyncPolicy<HttpResponseMessage>>());
 
             services.AddHttpClient<TESTPROJESI.Services.Implementations.BaseApiService>(client =>
             {
                 client.Timeout = TimeSpan.FromSeconds(30);
-            }).AddPolicyHandler(retryPolicy);
+            }).AddPolicyHandler((serviceProvider, _) =>
+                serviceProvider.GetRequiredService<IAsyncPolicy<HttpResponseMessage>>());
 
             return services;
         }
