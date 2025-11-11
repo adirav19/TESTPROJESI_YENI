@@ -1,0 +1,623 @@
+﻿@model List<TESTPROJESI.Business.DTOs.ProductionFlowDto>
+@{
+    ViewData["Title"] = "Üretim Akış Kayıtları (UAK)";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">🏭 Üretim Akış Kayıtları (ProductionFlow - UAK)</h2>
+
+    <div class="mb-3">
+        <button id="btnYeni" class="btn btn-success fw-bold">➕ Yeni UAK Kaydı</button>
+        <button id="btnMamulFisi" class="btn btn-primary fw-bold ms-2">📦 Mamul Fişi Oluştur</button>
+    </div>
+
+    @if (ViewBag.Hata != null)
+    {
+        <div class="alert alert-danger">
+            <strong>❌ Hata:</strong> @ViewBag.Hata
+        </div>
+    }
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>İş Emri No</th>
+                    <th>Stok Kodu</th>
+                    <th>Op. Kodu</th>
+                    <th>İstasyon</th>
+                    <th>Başlangıç</th>
+                    <th>Üretilen</th>
+                    <th>Fire</th>
+                    <th>İşlendi</th>
+                    <th>İşlem</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td><strong>@item.IsEmriNo</strong></td>
+                            <td>@item.StokKodu</td>
+                            <td>@item.OpKodu</td>
+                            <td>@item.IstasyonKodu</td>
+                            <td>@item.BASLANGICTARIH</td>
+                            <td class="text-end">@item.URETILENMIKTAR.ToString("N2")</td>
+                            <td class="text-end text-danger">@item.FIREMIKTAR.ToString("N2")</td>
+                            <td class="text-center">
+                                @if (item.ISLENDI)
+                                {
+                                    <span class="badge bg-success">✅ Evet</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning">⏳ Hayır</span>
+                                }
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-info btnDetay" data-id="@item.IncKeyNo">🔍 Detay</button>
+                                <button class="btn btn-sm btn-danger btnSil" data-id="@item.IncKeyNo">🗑️</button>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="9" class="text-center text-muted">Kayıt bulunamadı.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 🔧 Yeni UAK Kaydı Modal -->
+<div class="modal fade" id="newModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-success shadow">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold">➕ Yeni Üretim Akış Kaydı</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                html<form id="createForm">
+                    <div class="row">
+                        <!-- Satır 1 -->
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label small">İş Emri No <span class="text-danger">*</span></label>
+                            <input name="IsEmriNo" class="form-control" placeholder="Örn: 000000000000023" required />
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label small">Konfigürasyon Sıra No</label>
+                            <input name="CONFSIRANO" class="form-control" placeholder="Örn: 0003" />
+                        </div>
+
+                        <!-- Satır 2 -->
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label small">Stok Kodu <span class="text-danger">*</span></label>
+                            <input name="StokKodu" class="form-control" placeholder="Örn: tarak" required />
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label small">Operasyon Kodu <span class="text-danger">*</span></label>
+                            <input name="OpKodu" class="form-control" placeholder="Örn: ORMNT" required />
+                        </div>
+
+                        <!-- Satır 3 -->
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label small">Operasyon Sıra No</label>
+                            <input name="OPSIRANO" class="form-control" placeholder="Örn: 0003" />
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label small">İstasyon Kodu <span class="text-danger">*</span></label>
+                            <input name="IstasyonKodu" class="form-control" placeholder="Örn: MONTJ" required />
+                        </div>
+
+                        <!-- Satır 4 -->
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label small">Aktivite Kodu <span class="text-danger">*</span></label>
+                            <input name="AKTIVITEKODU" class="form-control" placeholder="Örn: 01" required />
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label small">Arıza Kodu</label>
+                            <input name="ARIZAKODU" class="form-control" placeholder="Arıza kodu" />
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label small">Depo Kodu <span class="text-danger">*</span></label>
+                            <input name="USKDEPOKODU" type="number" class="form-control" placeholder="Örn: 10" required />
+                        </div>
+
+                        <!-- Satır 5: Tarihler -->
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label small">Başlangıç Tarihi <span class="text-danger">*</span></label>
+                            <input name="BASLANGICTARIH" type="datetime-local" class="form-control" required />
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label small">Bitiş Tarihi <span class="text-danger">*</span></label>
+                            <input name="BITISTARIHSAAT" type="datetime-local" class="form-control" required />
+                        </div>
+
+                        <!-- Satır 6: Vardiya ve Süreler -->
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label small">Başlangıç Vardiyası</label>
+                            <input name="BASLANGICVARDIYA" type="number" class="form-control" placeholder="Örn: 1" value="1" />
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label small">Süre</label>
+                            <input name="SURE" type="number" step="0.01" class="form-control" placeholder="Dakika" value="0" />
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label small">Süre Tipi</label>
+                            <select name="SURETIPI" class="form-select">
+                                <option value="0">Dakika</option>
+                                <option value="1">Saat</option>
+                            </select>
+                        </div>
+
+                        <!-- Satır 7: Miktarlar -->
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label small">Üretilen Miktar <span class="text-danger">*</span></label>
+                            <input name="URETILENMIKTAR" type="number" step="0.01" class="form-control" placeholder="Örn: 50" required />
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label small">Fire Miktar</label>
+                            <input name="FIREMIKTAR" type="number" step="0.01" class="form-control" placeholder="Örn: 0" value="0" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label small">İşlendi mi?</label>
+                            <select name="ISLENDI" class="form-select">
+                                <option value="false">⏳ Hayır</option>
+                                <option value="true">✅ Evet</option>
+                            </select>
+                        </div>
+
+                        <!-- Satır 8: Ek Alanlar (Opsiyonel) -->
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label small">Proje Kodu</label>
+                            <input name="ProjeKodu" class="form-control" placeholder="Proje kodu" />
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label small">Revizyon No</label>
+                            <input name="RevNo" class="form-control" placeholder="Revizyon no" />
+                        </div>
+
+                        <!-- Satır 9: Makine ve İşçi -->
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label small">Makine No</label>
+                            <input name="MRPMAKINENO" type="number" class="form-control" placeholder="Makine no" value="0" />
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label small">İşçi No</label>
+                            <input name="MRPISCINO" type="number" class="form-control" placeholder="İşçi no" value="0" />
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 fw-bold mt-3">💾 Kaydet</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 📦 Mamul Fişi Modal -->
+<!-- 📦 Mamul Fişi Modal (Netsis Tarzı) -->
+<div class="modal fade" id="mamulModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-box-seam"></i> Üretim Sonu Kayıtlarını Oluşturma
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="mamulForm">
+                    <div class="row">
+                        <!-- Sol Panel -->
+                        <div class="col-md-6">
+                            <!-- Üretim Akış Kısıtları -->
+                            <div class="card mb-3 border-secondary">
+                                <div class="card-header bg-light fw-bold">
+                                    📋 Üretim Akış Kısıtları
+                                </div>
+                                <div class="card-body">
+                                    <!-- İş Emri No Aralığı -->
+                                    <div class="row mb-3">
+                                        <label class="col-sm-4 col-form-label">İş Emri No Aralığı:</label>
+                                        <div class="col-sm-4">
+                                            <input name="IsEmriNoAralikAlt" class="form-control form-control-sm"
+                                                   placeholder="000000000000023" />
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <input name="IsEmriNoAralikUst" class="form-control form-control-sm"
+                                                   placeholder="000000000000023" />
+                                        </div>
+                                    </div>
+
+                                    <!-- Tarih Aralığı -->
+                                    <div class="row mb-3">
+                                        <label class="col-sm-4 col-form-label">Tarih Aralığı:</label>
+                                        <div class="col-sm-4">
+                                            <input name="TarihAralikAlt" type="date" class="form-control form-control-sm" />
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <input name="TarihAralikUst" type="date" class="form-control form-control-sm" />
+                                        </div>
+                                    </div>
+
+                                    <!-- Vardiya Aralığı -->
+                                    <div class="row mb-2">
+                                        <label class="col-sm-4 col-form-label">Vardiya Aralığı:</label>
+                                        <div class="col-sm-4">
+                                            <input name="VardiyaAralikAlt" type="number" class="form-control form-control-sm"
+                                                   placeholder="1" value="1" />
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <input name="VardiyaAralikUst" type="number" class="form-control form-control-sm"
+                                                   placeholder="4" value="4" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Üretim Sonu Kaydı Parametreleri -->
+                            <div class="card border-secondary">
+                                <div class="card-header bg-light fw-bold">
+                                    ⚙️ Üretim Sonu Kaydı Parametreleri
+                                </div>
+                                <div class="card-body">
+                                    <!-- Checkbox: Fişler İş Emri Bazında -->
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox"
+                                               name="FislerIsEmriBazindaTekTekOlusturulsun"
+                                               id="tekTekCheck" value="true">
+                                        <label class="form-check-label" for="tekTekCheck">
+                                            Fişler İş Emri Bazında Tek Tek Oluşturulsun
+                                        </label>
+                                    </div>
+
+                                    <!-- Fiş No Serisi -->
+                                    <div class="row mb-2">
+                                        <label class="col-sm-4 col-form-label">Fiş No Serisi:</label>
+                                        <div class="col-sm-8">
+                                            <input name="FisNoSerisi" class="form-control form-control-sm"
+                                                   placeholder="A" value="A" />
+                                        </div>
+                                    </div>
+
+                                    <!-- Kayıt Tarihi -->
+                                    <div class="row mb-2">
+                                        <label class="col-sm-4 col-form-label">Kayıt Tarihi:</label>
+                                        <div class="col-sm-8">
+                                            <input name="KayitTarihi" type="date" class="form-control form-control-sm" />
+                                        </div>
+                                    </div>
+
+                                    <!-- Öncelik -->
+                                    <div class="row mb-2">
+                                        <label class="col-sm-4 col-form-label">Öncelik:</label>
+                                        <div class="col-sm-8">
+                                            <input name="Oncelik" type="number" class="form-control form-control-sm"
+                                                   placeholder="0" value="0" />
+                                        </div>
+                                    </div>
+
+                                    <!-- Depo Önceliği -->
+                                    <div class="row mb-2">
+                                        <label class="col-sm-4 col-form-label">Depo Önceliği:</label>
+                                        <div class="col-sm-8">
+                                            <select name="DepoOnceligi" class="form-select form-select-sm">
+                                                <option value="0">Hiçbiri</option>
+                                                <option value="1">HAMMADDE DEPO</option>
+                                                <option value="2">MAMUL DEPO</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- İ. Depo -->
+                                    <div class="row mb-2">
+                                        <label class="col-sm-4 col-form-label">İ. Depo:</label>
+                                        <div class="col-sm-4">
+                                            <input name="GirisDepo" type="number" class="form-control form-control-sm"
+                                                   placeholder="10" required />
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <small class="text-muted">HAMMADDE DEPO</small>
+                                        </div>
+                                    </div>
+
+                                    <!-- Çık. Depo -->
+                                    <div class="row mb-2">
+                                        <label class="col-sm-4 col-form-label">Çık. Depo:</label>
+                                        <div class="col-sm-4">
+                                            <input name="CikisDepo" type="number" class="form-control form-control-sm"
+                                                   placeholder="30" value="0" />
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <small class="text-muted">MAMUL DEPO</small>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bakiye -->
+                                    <div class="row mb-2">
+                                        <label class="col-sm-4 col-form-label">Bakiye:</label>
+                                        <div class="col-sm-8">
+                                            <input name="Bakiye" type="number" class="form-control form-control-sm"
+                                                   placeholder="0" value="0" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sağ Panel -->
+                        <div class="col-md-6">
+                            <!-- Oluşturulan Fişler Otomatik Üretilsin -->
+                            <div class="card mb-3 border-secondary">
+                                <div class="card-header bg-light fw-bold">
+                                    ⚙️ Oluşturulan Fişler Otomatik Üretilsin
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox"
+                                               name="FislerOtomatikUretilsin"
+                                               id="autoCheck" value="true" checked>
+                                        <label class="form-check-label" for="autoCheck">
+                                            ✓ Etkin
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Oto. Yarı Mamullerde Girdi/Çıktı -->
+                            <div class="card mb-3 border-secondary">
+                                <div class="card-header bg-light fw-bold">
+                                    🔄 Oto. Yarı Mamullerde Girdi/Çıktı
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox"
+                                               name="OtoYariMamullerdeGirdiCikti"
+                                               id="girdiCiktiCheck" value="true">
+                                        <label class="form-check-label" for="girdiCiktiCheck">
+                                            ✓ Etkin
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Otomatik Yarı Mamüllerde Stoktan Kullan -->
+                            <div class="card mb-3 border-secondary">
+                                <div class="card-header bg-light fw-bold">
+                                    📦 Otomatik Yarı Mamüllerde Stoktan Kullan
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox"
+                                               name="OtoYariMamullerdeStoktanKullan"
+                                               id="stoktanKullanCheck" value="true">
+                                        <label class="form-check-label" for="stoktanKullanCheck">
+                                            ✓ Etkin
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Mamuller Ölçü Birimi -->
+                            <div class="card mb-3 border-secondary">
+                                <div class="card-header bg-light fw-bold">
+                                    📏 Mamuller Ölçü Birimi
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio"
+                                                       name="MamullerOlcuBirimi" value="1" id="olcu1" checked>
+                                                <label class="form-check-label" for="olcu1">1</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio"
+                                                       name="MamullerOlcuBirimi" value="2" id="olcu2">
+                                                <label class="form-check-label" for="olcu2">2</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio"
+                                                       name="MamullerOlcuBirimi" value="3" id="olcu3">
+                                                <label class="form-check-label" for="olcu3">3</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Hatalı Kayıtlar Politikası -->
+                            <div class="card border-secondary">
+                                <div class="card-header bg-light fw-bold">
+                                    ⚠️ Hatalı Kayıtlar Politikası
+                                </div>
+                                <div class="card-body">
+                                    <select name="HataliKayitlarPolitikasi" class="form-select form-select-sm">
+                                        <option value="0">Hatalı Kayıtları Atla</option>
+                                        <option value="1">Hatalı Kayıtlarda Dur</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Butonlar -->
+                    <div class="row mt-4">
+                        <div class="col-12 text-center">
+                            <button type="submit" class="btn btn-danger btn-lg px-5 me-2">
+                                <i class="bi bi-check-circle"></i> Oluştur
+                            </button>
+                            <button type="button" class="btn btn-success btn-lg px-5" id="btnSecimliOlustur">
+                                <i class="bi bi-check2-all"></i> Seçimli Oluştur
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // ➕ Yeni kayıt modalı
+            $('#btnYeni').click(function () {
+                $('#newModal').modal('show');
+            });
+
+            // 📦 Mamul fişi modalı
+            $('#btnMamulFisi').click(function () {
+                $('#mamulModal').modal('show');
+            });
+
+            // ✅ Yeni kayıt oluşturma
+                         // ✅ Yeni kayıt oluşturma
+        $('#createForm').submit(function (e) {
+            e.preventDefault();
+            const formData = $(this).serializeArray();
+            const jsonData = {};
+
+            $.each(formData, function (i, field) {
+                jsonData[field.name] = field.value;
+            });
+
+            // Boolean alanları düzelt
+            jsonData['ISLENDI'] = jsonData['ISLENDI'] === 'true';
+            if (jsonData['BASLADI_BITMEDI']) {
+                jsonData['BASLADI_BITMEDI'] = jsonData['BASLADI_BITMEDI'] === 'true';
+            }
+
+            // Sayısal alanları düzelt
+            const intFields = ['IncKeyNo', 'MRPMAKINENO', 'MRPISCINO', 'BASLANGICVARDIYA', 'SURETIPI', 'USKDEPOKODU', 'UAKKaynakListCount'];
+            intFields.forEach(field => {
+                if (jsonData[field]) jsonData[field] = parseInt(jsonData[field]) || 0;
+            });
+
+            const decimalFields = ['SIMULTANEOPR', 'SURE', 'URETILENMIKTAR', 'FIREMIKTAR', 'OLCUBRMIKTAR', 'OLCUBRFIRE'];
+            decimalFields.forEach(field => {
+                if (jsonData[field]) jsonData[field] = parseFloat(jsonData[field]) || 0;
+            });
+
+            // Tarih formatını API'nin beklediği formata çevir (YYYY-MM-DD HH:mm:ss)
+            if (jsonData['BASLANGICTARIH']) {
+                jsonData['BASLANGICTARIH'] = jsonData['BASLANGICTARIH'].replace('T', ' ') + ':00';
+            }
+            if (jsonData['BITISTARIHSAAT']) {
+                jsonData['BITISTARIHSAAT'] = jsonData['BITISTARIHSAAT'].replace('T', ' ') + ':00';
+            }
+
+            console.log('📤 Gönderilen veri:', jsonData); // Debug için
+
+            $.ajax({
+                url: '/ProductionFlow/Create',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(jsonData),
+                success: function (response) {
+                    console.log('✅ API Yanıtı:', response);
+                    alert(response.message);
+                    location.reload();
+                },
+                error: function (xhr) {
+                    console.error('❌ Hata:', xhr);
+                    alert('Hata: ' + (xhr.responseJSON?.message || 'Bilinmeyen hata'));
+                }
+            });
+        });
+
+            // 📦 Mamul fişi oluşturma
+                   // 📦 Mamul fişi oluşturma
+              $('#mamulForm').submit(function (e) {
+            e.preventDefault();
+            const formData = $(this).serializeArray();
+            const jsonData = {};
+
+            $.each(formData, function (i, field) {
+                jsonData[field.name] = field.value;
+            });
+
+            // Boolean alanları düzelt
+            const boolFields = [
+                'FislerIsEmriBazindaTekTekOlusturulsun',
+                'FislerOtomatikUretilsin',
+                'OtoYariMamullerdeGirdiCikti',
+                'OtoYariMamullerdeStoktanKullan'
+            ];
+
+            boolFields.forEach(field => {
+                if (jsonData[field] !== undefined) {
+                    jsonData[field] = jsonData[field] === 'true' || jsonData[field] === true;
+                } else {
+                    jsonData[field] = false;
+                }
+            });
+
+            // Sayısal alanları düzelt
+            const intFields = ['VardiyaAralikAlt', 'VardiyaAralikUst', 'Oncelik', 'DepoOnceligi', 'GirisDepo', 'CikisDepo', 'MamullerOlcuBirimi', 'Bakiye', 'HataliKayitlarPolitikasi'];
+            intFields.forEach(field => {
+                if (jsonData[field]) jsonData[field] = parseInt(jsonData[field]) || 0;
+            });
+
+            // Tarih formatını düzelt (sadece YYYY-MM-DD formatında)
+            if (jsonData['TarihAralikAlt']) {
+                jsonData['TarihAralikAlt'] = jsonData['TarihAralikAlt'] + ' 00:00:00';
+            }
+            if (jsonData['TarihAralikUst']) {
+                jsonData['TarihAralikUst'] = jsonData['TarihAralikUst'] + ' 23:59:59';
+            }
+            if (jsonData['KayitTarihi']) {
+                jsonData['KayitTarihi'] = jsonData['KayitTarihi'] + ' 00:00:00';
+            }
+
+            console.log('📤 Mamul Fişi Verisi:', jsonData);
+
+            $.ajax({
+                url: '/ProductionFlow/CreateFinishedGoodsReceipt',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(jsonData),
+                success: function (response) {
+                    console.log('✅ API Yanıtı:', response);
+                    alert(response.message);
+                    $('#mamulModal').modal('hide');
+                    location.reload();
+                },
+                error: function (xhr) {
+                    console.error('❌ Hata:', xhr);
+                    alert('Hata: ' + (xhr.responseJSON?.message || 'Bilinmeyen hata'));
+                }
+            });
+        });
+
+        // Seçimli Oluştur butonu (opsiyonel)
+        $('#btnSecimliOlustur').click(function() {
+            alert('Bu özellik henüz aktif değil. Standart "Oluştur" butonunu kullanın.');
+        });
+
+            // 🗑️ Silme işlemi
+            $('.btnSil').click(function () {
+                const id = $(this).data('id');
+                if (!confirm('Silmek istediğinize emin misiniz?')) return;
+
+                $.post('/ProductionFlow/Delete', { id: id }, function (response) {
+                    alert(response.message);
+                    location.reload();
+                }).fail(function (xhr) {
+                    alert('Hata: ' + (xhr.responseJSON?.message || 'Bilinmeyen hata'));
+                });
+            });
+        });
+    </script>
+}

@@ -1,0 +1,89 @@
+﻿@{
+    ViewData["Title"] = "İş Emri Girişi";
+}
+
+<div class="container mt-4">
+    <h3>İş Emri Girişi</h3>
+    <form id="productionOrderForm">
+        <div class="mb-3">
+            <label class="form-label">İş Emri No</label>
+            <input type="text" class="form-control" id="IsEmriNo" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Stok Kodu</label>
+            <input type="text" class="form-control" id="StokKodu" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Tarih</label>
+            <input type="date" class="form-control" id="Tarih" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Miktar</label>
+            <input type="number" class="form-control" id="Miktar" required />
+        </div>
+        <button type="submit" class="btn btn-primary">Kaydet</button>
+    </form>
+
+    <div id="alertBox" class="mt-3"></div>
+</div>
+
+<script>
+    document.getElementById("productionOrderForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        // 🔹 Formdan gelen alanlar
+        const isEmriNo = document.getElementById("IsEmriNo").value.trim();
+        const stokKodu = document.getElementById("StokKodu").value.trim();
+        const tarih = document.getElementById("Tarih").value;
+        const miktar = parseFloat(document.getElementById("Miktar").value);
+
+        if (!isEmriNo || !stokKodu || !tarih || !miktar) {
+            document.getElementById("alertBox").innerHTML =
+                `<div class="alert alert-warning">Lütfen tüm alanları doldurun.</div>`;
+            return;
+        }
+
+        // 🔹 Gönderilecek DTO
+        const dto = {
+            TransactSupport: true,
+            MuhasebelesmisBelge: true,
+            IsEmriNo: isEmriNo,
+            Tarih: new Date(tarih).toISOString(),
+            StokKodu: TARAK,
+            Miktar: 1,
+            Olcubr: 1,
+            Aciklama: "Web'den oluşturuldu",
+            TeslimTarihi: new Date(tarih).toISOString(),
+            Kapali: false,
+
+            // 🔹 API’nin zorunlu beklediği alanlar (arka planda otomatik doldur)
+            SubeKodu: 0,
+            DepoKodu: 10,
+            CikisDepoKodu: 20,
+            HatKodu: "HAT01",
+            UskDurumu: 0,
+            RezervasyonDurumu: 0,
+            OnayTipi: "M",
+            OnayNum: 0,
+            TepeMam: stokKodu
+        };
+
+        try {
+            const response = await fetch("/ProductionOrder/Create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(dto)
+            });
+
+            const result = await response.json();
+            const alertType = result.success ? "success" : "danger";
+            document.getElementById("alertBox").innerHTML =
+                `<div class="alert alert-${alertType}">${result.message}</div>`;
+
+            if (result.success) e.target.reset();
+        } catch (err) {
+            document.getElementById("alertBox").innerHTML =
+                `<div class="alert alert-danger">Bir hata oluştu: ${err.message}</div>`;
+        }
+    });
+</script>

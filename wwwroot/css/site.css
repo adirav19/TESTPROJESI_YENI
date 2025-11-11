@@ -1,0 +1,46 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+/* Mamul Fiþi Modal Özel Stil */
+#mamulModal .card-header {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+}
+
+#mamulModal .form-control-sm,
+#mamulModal .form-select-sm {
+    font-size: 0.875rem;
+}
+
+#mamulModal .col-form-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+#mamulModal .form-check-label {
+    font-size: 0.875rem;
+}
+
+#mamulModal .card-body {
+    padding: 1rem;
+}
