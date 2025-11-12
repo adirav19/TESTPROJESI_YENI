@@ -11,7 +11,7 @@ namespace TESTPROJESI.Services.Interfaces
         /// <summary>
         /// 📋 Tüm üretim fişlerini listeler
         /// </summary>
-        Task<List<FinishedGoodsCreateDto>> GetAllAsync(string queryParams = null);
+        Task<List<FinishedGoodsCreateDto>> GetAllAsync(string? queryParams = null);
 
         /// <summary>
         /// 🔍 Belirli bir fişin detayını getirir

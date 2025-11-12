@@ -10,7 +10,7 @@ namespace TESTPROJESI.Services.Interfaces
         /// <summary>
         /// 📋 Tüm ProductionFlow kayıtlarını getirir
         /// </summary>
-        Task<List<ProductionFlowDto>> GetAllAsync(string queryParams = null);
+        Task<List<ProductionFlowDto>> GetAllAsync(string? queryParams = null);
 
         /// <summary>
         /// 🔍 ID'ye göre tek bir ProductionFlow kaydı getirir
