@@ -6,7 +6,6 @@ using TESTPROJESI.Services.Base;
 using TESTPROJESI.Models;
 using TESTPROJESI.Core.Extensions;
 using TESTPROJESI.Core.Constants;
-using TESTPROJESI.Core.Builders;
 using Microsoft.Extensions.Logging;
 
 namespace TESTPROJESI.Services.Implementations
@@ -25,40 +24,19 @@ namespace TESTPROJESI.Services.Implementations
             IBaseApiService apiService,
             ITokenManager tokenManager,
             ILogger<FinishedGoodsService> logger)
-            : base(apiService, tokenManager, logger, new FinishedGoodsMapper(), AppConstants.Endpoints.FinishedGoods)
+            : base(
+                  apiService,
+                  tokenManager,
+                  logger,
+                  new FinishedGoodsMapper(),
+                  AppConstants.Endpoints.FinishedGoods,
+                  new ModuleServiceOptions
+                  {
+                      DefaultSortField = "UretSon_FisNo",
+                      DefaultSortDescending = true
+                  })
         {
             _detailMapper = new FinishedGoodsMapper();
-        }
-
-        /// <summary>
-        /// 📋 Tüm fişleri listeler (Override - RequestBuilder kullanır)
-        /// </summary>
-        public override async Task<List<FinishedGoodsCreateDto>> GetAllAsync(string? queryParams = null)
-        {
-            if (!queryParams.IsNullOrWhiteSpace())
-                return await base.GetAllAsync(queryParams);
-
-            // ✅ RequestBuilder ile esnek query oluştur
-            var url = ApiRequestBuilder.Create()
-                .WithEndpoint(_endpoint)
-                .WithLimit(50)
-                .WithSort("UretSon_FisNo", descending: true)
-                .BuildUrl();
-
-            var token = await _tokenManager.GetTokenAsync();
-            var responseJson = await _apiService.GetAsync<JsonElement>(url, token);
-            var dataArray = responseJson.UnwrapData();
-
-            if (dataArray.ValueKind != JsonValueKind.Array)
-            {
-                _logger.LogWarning("⚠️ Beklenmeyen JSON formatı");
-                return new List<FinishedGoodsCreateDto>();
-            }
-
-            var list = _mapper.MapList(dataArray.EnumerateArray()).ToList();
-            _logger.LogInformation(AppConstants.SuccessMessages.Listed, list.Count);
-
-            return list;
         }
 
         /// <summary>

@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 using TESTPROJESI.Core.Builders;
 using TESTPROJESI.Core.Constants;
@@ -20,19 +22,22 @@ namespace TESTPROJESI.Services.Base
         protected readonly ILogger _logger;
         protected readonly IMapper<JsonElement, TDto> _mapper;
         protected readonly string _endpoint;
+        protected readonly ModuleServiceOptions _options;
 
         protected GenericModuleService(
             IBaseApiService apiService,
             ITokenManager tokenManager,
             ILogger logger,
             IMapper<JsonElement, TDto> mapper,
-            string endpoint)
+            string endpoint,
+            ModuleServiceOptions? options = null)
         {
             _apiService = apiService;
             _tokenManager = tokenManager;
             _logger = logger;
             _mapper = mapper;
             _endpoint = endpoint;
+            _options = options ?? new ModuleServiceOptions();
         }
 
         /// <summary>
@@ -45,10 +50,7 @@ namespace TESTPROJESI.Services.Base
                 var token = await _tokenManager.GetTokenAsync();
 
                 var url = string.IsNullOrWhiteSpace(queryParams)
-                    ? ApiRequestBuilder.Create()
-                        .WithEndpoint(_endpoint)
-                        .WithLimit(50)
-                        .BuildUrl()
+                    ? BuildDefaultListUrl()
                     : $"{_endpoint}?{queryParams}";
 
                 var responseJson = await _apiService.GetAsync<JsonElement>(url, token);
@@ -70,6 +72,30 @@ namespace TESTPROJESI.Services.Base
                 _logger.LogError(ex, "❌ GetAll hatası: {Endpoint}", _endpoint);
                 throw;
             }
+        }
+
+        protected virtual string BuildDefaultListUrl()
+        {
+            var builder = ApiRequestBuilder.Create()
+                .WithEndpoint(_endpoint);
+
+            if (_options.DefaultLimit.HasValue)
+            {
+                builder = builder.WithLimit(_options.DefaultLimit.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(_options.DefaultSortField))
+            {
+                builder = builder.WithSort(_options.DefaultSortField!, _options.DefaultSortDescending);
+            }
+
+            if (_options.DefaultQueryParameters?.Count > 0)
+            {
+                builder = builder.WithQueryParams(_options.DefaultQueryParameters
+                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
+            }
+
+            return builder.BuildUrl();
         }
 
         /// <summary>
